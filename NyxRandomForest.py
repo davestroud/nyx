@@ -7,7 +7,10 @@ import sys
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
 import pandas as pd
+from statistics import stdev
 
 def main():
     DIR = '/home/drew/School/Nyx_04_30_21'
@@ -40,12 +43,26 @@ def book_lin_reg(data):
     
     # Run model, get rmse. 
     X_train, X_test, y_train, y_test = train_test_split(x, y, test_size = .50)
-    model = RandomForestRegressor(n_estimators = 100, max_depth = 10, min_samples_split = 15)
-    model.fit(X_train, y_train)
-    preds = model.predict(X_test)
+    for depth in [10, 50, 100, 500]:
+        for leaf in [25, 100, 500]:
+            model = RandomForestRegressor(n_estimators = 100, max_depth = depth, min_samples_leaf = leaf, n_jobs = -1)
+            model.fit(X_train, y_train)
+            preds = model.predict(X_test)
+            mse = ((preds - y_test) ** 2).mean()
+            print('rmse', depth, leaf, np.sqrt(mse))
+            
+    reg = LinearRegression().fit(X_train, y_train)
+    preds = reg.predict(X_test)
     mse = ((preds - y_test) ** 2).mean()
     print('rmse', np.sqrt(mse))
     
+    for x in range(25, 40):
+        near = KNeighborsRegressor(n_neighbors = x, n_jobs = -1).fit(X_train, y_train)
+        preds = near.predict(X_test)
+        mse = ((preds - y_test) ** 2).mean()
+        print('rmse', x, np.sqrt(mse))                
+    np.sqrt(((y_test.mean() - y_test) ** 2).mean())
+
 if __name__ == '__main__':
     main()
     
